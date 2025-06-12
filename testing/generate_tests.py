@@ -10,7 +10,6 @@ import binwalk
 test_script_template = """
 import os
 import binwalk
-from nose.tools import eq_, ok_
 
 def test_%s():
     '''
@@ -30,15 +29,15 @@ def test_%s():
                                quiet=True)
 
     # Test number of modules used
-    eq_(len(scan_result), 1)
+    assert len(scan_result) == 1
 
     # Test number of results for that module
-    eq_(len(scan_result[0].results), len(expected_results))
+    assert len(scan_result[0].results) == len(expected_results)
 
     # Test result-description
     for i in range(0, len(scan_result[0].results)):
-        eq_(scan_result[0].results[i].offset, expected_results[i][0])
-        eq_(scan_result[0].results[i].description, expected_results[i][1])
+        assert scan_result[0].results[i].offset == expected_results[i][0]
+        assert scan_result[0].results[i].description == expected_results[i][1]
 """
 
 try:

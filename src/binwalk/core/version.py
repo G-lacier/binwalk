@@ -1,14 +1,13 @@
 try:
     from importlib import metadata
-    get_version = lambda : metadata.version("binwalk")
-except ImportError:
+except ImportError:  # pragma: no cover
+    import importlib_metadata as metadata  # type: ignore
+
+def get_version():
+    """Retrieve installed binwalk version."""
     try:
-        # Running on pre-3.8 Python; use importlib-metadata package
-        import importlib_metadata as metadata
-        get_version = lambda: metadata.version("binwalk")
-    except ImportError:
-        # 3rd fallback via pkg_resources
-        import pkg_resources
-        get_version = lambda : pkg_resources.get_distribution("binwalk").version
+        return metadata.version("binwalk")
+    except Exception:
+        return "0.0"
 
 __version__ = get_version()

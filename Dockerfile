@@ -23,8 +23,8 @@ RUN set -xue \
     && locale-gen
 
 FROM build-and-install AS unit-tests
-RUN pip install coverage nose \
-    && python3 setup.py test \
+RUN pip install coverage pytest \
+    && pytest -q \
     && dd if=/dev/urandom of=/tmp/random.bin bs=1M count=1 && binwalk -J -E /tmp/random.bin
 
 FROM build-and-install AS cleanup-and-release
