@@ -287,11 +287,11 @@ class TestCommand(Command):
         pass
 
     def run(self):
-        # Need the nose module for testing
-        import nose
+        # Run tests using pytest
+        import pytest
 
         # cd into the testing directory. Otherwise, the src/binwalk
-        # directory gets imported by nose which a) clutters the src
+        # directory gets imported by pytest which a) clutters the src
         # directory with a bunch of .pyc files and b) will fail anyway
         # unless a build/install has already been run which creates
         # the version.py file.
@@ -299,7 +299,7 @@ class TestCommand(Command):
         os.chdir(testing_directory)
 
         # Run the tests
-        retval = nose.core.run(argv=['--exe','--with-coverage'])
+        retval = pytest.main(["-q"])
 
         sys.stdout.write("\n")
 
@@ -312,10 +312,10 @@ class TestCommand(Command):
         for extracted_directory in glob.glob("%s/*.extracted" % input_vectors_directory):
             remove_tree(extracted_directory)
 
-        if retval == True:
-           sys.exit(0)
+        if retval == 0:
+            sys.exit(0)
         else:
-           sys.exit(1)
+            sys.exit(retval)
 
 # The data files to install along with the module
 install_data_files = []

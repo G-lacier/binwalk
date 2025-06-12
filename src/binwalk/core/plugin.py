@@ -1,7 +1,7 @@
 # Core code for supporting and managing plugins.
 
 import os
-import imp
+import importlib.util
 import inspect
 import binwalk.core.common
 import binwalk.core.settings
@@ -180,11 +180,15 @@ class Plugins(object):
                         module = file_name[:-len(self.MODULE_EXTENSION)]
 
                         try:
-                            plugin = imp.load_source(module, os.path.join(plugins[key]['path'], file_name))
+                            plugin_path = os.path.join(plugins[key]['path'], file_name)
+                            spec = importlib.util.spec_from_file_location(module, plugin_path)
+                            plugin = importlib.util.module_from_spec(spec)
+                            spec.loader.exec_module(plugin)
                             plugin_class = self._find_plugin_class(plugin)
 
                             plugins[key]['enabled'][module] = True
                             plugins[key]['modules'].append(module)
+                            description = plugin_class.__doc__.strip().split('\n')[0]
                         except KeyboardInterrupt as e:
                             raise e
                         # Python files in the plugins directory that are not
@@ -192,19 +196,16 @@ class Plugins(object):
                         # about converting an object to a string implicitly.
                         # Don't need to warn about these.
                         except TypeError:
-                            pass
+                            continue
                         except Exception as e:
                             binwalk.core.common.warning("Error loading plugin '%s': %s" % (file_name, str(e)))
                             plugins[key]['enabled'][module] = False
+                            continue
 
                         try:
-                            plugins[key]['descriptions'][
-                                module] = plugin_class.__doc__.strip().split('\n')[0]
-                        except KeyboardInterrupt as e:
-                            raise e
-                        except Exception as e:
-                            plugins[key]['descriptions'][
-                                module] = 'No description'
+                            plugins[key]['descriptions'][module] = description
+                        except Exception:
+                            plugins[key]['descriptions'][module] = 'No description'
         return plugins
 
     def load_plugins(self):
@@ -222,7 +223,9 @@ class Plugins(object):
                 continue
 
             try:
-                plugin = imp.load_source(module, file_path)
+                spec = importlib.util.spec_from_file_location(module, file_path)
+                plugin = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(plugin)
                 plugin_class = self._find_plugin_class(plugin)
 
                 class_instance = plugin_class(self.parent)

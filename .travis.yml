@@ -28,18 +28,24 @@ jobs:
    - stage: test
      dist: bionic
      python: 3.8
-   - stage: test
-     dist: bionic
-     python: 3.9
-   - stage: test
-     dist: focal
-     python: 3.6
+  - stage: test
+    dist: bionic
+    python: 3.9
+  - stage: test
+    dist: bionic
+    python: 3.12
+  - stage: test
+    dist: focal
+    python: 3.6
    - stage: test
      dist: focal
      python: 3.7
    - stage: test
      dist: focal
      python: 3.8
-   - stage: test
-     dist: focal
-     python: 3.9
+  - stage: test
+    dist: focal
+    python: 3.9
+  - stage: test
+    dist: focal
+    python: 3.12

@@ -704,18 +704,22 @@ class Modules(object):
                 modules[module] = module.PRIORITY
 
         # user-defined modules
-        import imp
+        import importlib.util
         user_modules = binwalk.core.settings.Settings().user.modules
         for file_name in os.listdir(user_modules):
             if not file_name.endswith('.py'):
                 continue
             module_name = file_name[:-3]
             try:
-                user_module = imp.load_source(module_name, os.path.join(user_modules, file_name))
+                module_path = os.path.join(user_modules, file_name)
+                spec = importlib.util.spec_from_file_location(module_name, module_path)
+                user_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(user_module)
             except KeyboardInterrupt as e:
                 raise e
             except Exception as e:
                 binwalk.core.common.warning("Error loading module '%s': %s" % (file_name, str(e)))
+                continue
 
             for (name, module) in inspect.getmembers(user_module):
                 if inspect.isclass(module) and hasattr(module, attribute):

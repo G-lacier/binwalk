@@ -1,6 +1,7 @@
 import os
 import binwalk
-from nose.tools import eq_, ok_, assert_equal, assert_not_equal
+import pytest
+from binwalk.core.exceptions import ModuleException
 
 def test_dirtraversal():
     '''
@@ -18,16 +19,18 @@ def test_dirtraversal():
                                     "input-vectors",
                                     "_dirtraversal.tar.extracted")
 
-    scan_result = binwalk.scan(input_vector_file,
-                               signature=True,
-                               extract=True,
-                               quiet=True)[0]
+    try:
+        scan_result = binwalk.scan(
+            input_vector_file, signature=True, extract=True, quiet=True
+        )[0]
+    except ModuleException:
+        pytest.skip("Extraction dependencies missing")
 
     # Make sure the bad symlinks have been sanitized and the
     # good symlinks have not been sanitized.
     for symlink in bad_symlink_file_list:
         linktarget = os.path.realpath(os.path.join(output_directory, symlink))
-        assert_equal(linktarget, os.devnull)
+        assert linktarget == os.devnull
     for symlink in good_symlink_file_list:
         linktarget = os.path.realpath(os.path.join(output_directory, symlink))
-        assert_not_equal(linktarget, os.devnull)
+        assert linktarget != os.devnull
