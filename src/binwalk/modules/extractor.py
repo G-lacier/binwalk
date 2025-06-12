@@ -929,21 +929,18 @@ class Extractor(Module):
                     # Execute external extractor
                     rval = self.shell_call(command)
 
-                    # Check the return value to see if extraction was successful or not
-                    if rval in codes:
-                        retval = True
-                    else:
-                        retval = False
-
-                    binwalk.core.common.debug('External extractor command "%s" completed with return code %d (success: %s)' % (cmd, rval, str(retval)))
+                    success = rval in codes
+                    binwalk.core.common.debug(
+                        'External extractor command "%s" completed with return code %d (success: %s)'
+                        % (command, rval, str(success))
+                    )
                     command_list.append(command)
 
-                    # TODO: Should errors from all commands in a command string be checked? Currently we only support
-                    #       specifying one set of error codes, so at the moment, this is not done; it is up to the
-                    #       final command to return success or failure (which presumably it will if previous necessary
-                    #       commands were not successful, but this is an assumption).
-                    # if retval == False:
-                    #    break
+                    if not success:
+                        retval = False
+                        break
+                else:
+                    retval = True
 
         except KeyboardInterrupt as e:
             raise e
@@ -966,11 +963,11 @@ class Extractor(Module):
             
             # Fork a child process
             child_pid = os.fork()
-            if child_pid is 0:
+            if child_pid == 0:
                 # Switch to the run-as user privileges, if one has been set
                 if self.runas_uid is not None and self.runas_gid is not None:
-                    os.setgid(self.runas_uid)
-                    os.setuid(self.runas_gid)
+                    os.setgid(self.runas_gid)
+                    os.setuid(self.runas_uid)
         else:
             # child_pid of None indicates that no os.fork() occured
             child_pid = None
@@ -981,7 +978,7 @@ class Extractor(Module):
             rval = subprocess.call(shlex.split(command), stdout=tmp, stderr=tmp)
 
         # A true child process should exit with the subprocess exit value
-        if child_pid is 0:
+        if child_pid == 0:
             sys.exit(rval)
         # If no os.fork() happened, just return the subprocess exit value
         elif child_pid is None:

@@ -238,14 +238,22 @@ class MathExpression(object):
         return self._eval(ast.parse(expr).body[0].value)
 
     def _eval(self, node):
-        if isinstance(node, ast.Num):  # <number>
-            return node.n
-        elif isinstance(node, ast.operator):  # <operator>
-            return self.OPERATORS[type(node.op)]
+        # Handle numeric constants across Python versions without raising
+        # deprecation warnings. Newer Python versions use ast.Constant while
+        # older versions (<3.8) used ast.Num.
+        if sys.version_info >= (3, 8):
+            if isinstance(node, ast.Constant):
+                return node.value
+        else:
+            if isinstance(node, ast.Num):
+                return node.n
+
+        if isinstance(node, ast.BinOp):  # <left> <operator> <right>
+            return self.OPERATORS[type(node.op)](
+                self._eval(node.left), self._eval(node.right)
+            )
         elif isinstance(node, ast.UnaryOp):
             return self.OPERATORS[type(node.op)](0, self._eval(node.operand))
-        elif isinstance(node, ast.BinOp):  # <left> <operator> <right>
-            return self.OPERATORS[type(node.op)](self._eval(node.left), self._eval(node.right))
         else:
             raise TypeError(node)
 

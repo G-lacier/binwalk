@@ -428,7 +428,8 @@ class Magic(object):
         # Regex rule to find format strings
         self.fmtstr = re.compile("%[^%]")
         # Regex rule to find periods (see self._do_math)
-        self.period = re.compile("\.")
+        # Use a raw string to avoid invalid escape sequence warnings
+        self.period = re.compile(r"\.")
 
     def reset(self):
         self.display_once = set()
@@ -455,7 +456,7 @@ class Magic(object):
 
         # If exclusive include filters have been specified and did
         # not match the text, then the text should be filtered out.
-        if self.includes and filtered == None:
+        if self.includes and filtered is None:
             return True
 
         for exclude in self.excludes:
@@ -465,7 +466,7 @@ class Magic(object):
 
         # If no explicit exclude filters were matched, then the
         # text should *not* be filtered.
-        if filtered == None:
+        if filtered is None:
             filtered = False
 
         return filtered
@@ -602,7 +603,7 @@ class Magic(object):
                         dvalue = 0
                 # Else, this is a string
                 else:
-                    # Wildcard strings have line.value == None
+                    # Wildcard strings have line.value is None
                     if line.value is None:
                         # Check to see if this is a string whose size is known and has been specified on a previous
                         # signature line.
@@ -681,7 +682,8 @@ class Magic(object):
                     # but we want to display them as nicely formatted strings.
                     if line.type == 'date':
                         try:
-                            ts = datetime.datetime.utcfromtimestamp(dvalue)
+                            ts = datetime.datetime.fromtimestamp(
+                                dvalue, datetime.timezone.utc)
                             dvalue = ts.strftime("%Y-%m-%d %H:%M:%S")
                         except KeyboardInterrupt as e:
                             raise e
